@@ -11,7 +11,6 @@ public class ServerTread extends Thread{
 
     public  Socket soc;
     private int tid;
-    private boolean isFirst = true;
 
     public ServerTread(Socket soc, int tid){
         this.soc = soc;
@@ -43,9 +42,7 @@ public class ServerTread extends Thread{
                         PrintWriter newDot = new PrintWriter(newOut,true);
                         newDot.println("[" + soc.getInetAddress()  + "/"+  soc.getPort()  + "] ["+ LocalTime.now()  +"]" + " : " +chatchat);
                     }
-                    if(isFirst){
-                        isFirst = false;
-                    }
+
                     
                 }
             } catch (IOException e) {

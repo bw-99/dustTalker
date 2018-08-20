@@ -7,12 +7,11 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import javax.swing.*;
 import javax.swing.plaf.DimensionUIResource;
 
-
+//깃허브 커밋 날짜 수정?
 public class GuiMain extends Thread {
 	public static DustMain  dustMain  = null;
 	public static ChatMain chat = null;
