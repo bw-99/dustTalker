@@ -2,6 +2,9 @@
 import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -16,18 +19,26 @@ public class GuiMain extends Thread {
 	public static ChatMain chat = null;
 	public static InitUI initUI= null;
 	public static MainFrame mainFrame = null;
+	public static Timer timer = null;
 
-	public GuiMain(){
-
-		dustMain = new DustMain();
-		dustMain.run("종로구");
-		mainFrame = new MainFrame();
-	}
 
     public void run() {
-		mainFrame.run();
+		mainFrame = new MainFrame();
+		mainFrame.start();
+
+		timer = new Timer();
+		timer.run();
+
+		MainFrame.ApiLock.lock();
+		dustMain = new DustMain();
+		dustMain.start();
+		MainFrame.ApiCondition.signal();
+		MainFrame.ApiLock.unlock();
+
+		
+
 		chat = new ChatMain(InitUI.textArea, InitUI.tfMsg);
-		chat.run();
+		chat.start();
     }
 }
 
@@ -41,6 +52,10 @@ class MainFrame extends Thread{
 	public static Lock lock = new ReentrantLock();
 	// Create a condition
 	public static Condition newDeposit = lock.newCondition();
+
+
+	public static Lock ApiLock = new ReentrantLock();
+	public static Condition ApiCondition = ApiLock.newCondition();
 
 
 	public void run(){
@@ -60,19 +75,18 @@ class InitUI extends JFrame{
 
 	public static JTextField tfMsg;	
 
-	public static JLabel Pm10 = new JLabel("1.0");
-	public static JLabel Pm2_5 = new JLabel("2.0");
+	public static JLabel Pm10 = new JLabel("");
+	public static JLabel Pm2_5 = new JLabel("");
 	public static JLabel O3 = new JLabel("2.0");
 	public static JLabel NO2 = new JLabel("2.0");
 	public static JLabel CO = new JLabel("2.0");
 	public static JLabel SO2 = new JLabel("2.0");
 
 	public static JPanel dp= null;
+	public static JLabel labelTimer = new JLabel("timer");
 
 	public JScrollBar cursor = null;
-
-    
-
+	private ArrayList<JButton> locButtons = new ArrayList();
 
 	JButton btnSend;
 
@@ -112,7 +126,7 @@ class InitUI extends JFrame{
         return msgPanel;
     }
 
-	private ArrayList<JButton> locButtons = new ArrayList();
+	
 	private void addLocation(String[] locs, JPanel dust){
 	
 		for(int i=0;i<locs.length;i++){
@@ -128,8 +142,11 @@ class InitUI extends JFrame{
 
 				@Override
 				public void actionPerformed(ActionEvent e) {
-					GuiMain.dustMain.run(location);
-					
+					MainFrame.ApiLock.lock();
+					MainFrame.location = location;
+					MainFrame.ApiCondition.signal();
+					MainFrame.ApiLock.unlock();
+	
 					for(int i=0;i<locButtons.size();i++){
 						locButtons.get(i).setBackground(Color.WHITE);
 						locButtons.get(i).setForeground(Color.BLACK);
@@ -225,6 +242,7 @@ class InitUI extends JFrame{
 		
 		JLabel labelPm10 = new JLabel("        PM 10");
 		JLabel labelPm2_5 = new JLabel("        PM 2.5");
+		// JLabel labeTimerAid = new JLabel("REFRESH : ");
 
 		{
 			labelPm10.setBackground(Color.RED);
@@ -237,6 +255,25 @@ class InitUI extends JFrame{
 
 			this.add(labelPm10);
 		}
+
+		{
+			labelTimer.setBackground(Color.WHITE);
+			labelTimer.setForeground(Color.BLACK);
+			labelTimer.setOpaque(true);
+			labelTimer.setLocation(900, 130);
+			labelTimer.setFont(new Font("Serif",Font.BOLD,30));
+			labelTimer.setSize(200,50);
+			this.add(labelTimer);
+		}
+		// {
+		// 	labeTimerAid.setBackground(Color.WHITE);
+		// 	labeTimerAid.setForeground(Color.BLACK);
+		// 	labeTimerAid.setOpaque(true);
+		// 	labeTimerAid.setFont(new Font("Serif",Font.BOLD,30));
+		// 	labeTimerAid.setLocation(800, 130);
+		// 	labeTimerAid.setSize(200,50);
+		// 	this.add(labeTimerAid);
+		// }
 
 		{
 			Pm10.setFont(new Font("Serif",Font.BOLD,30));
@@ -309,7 +346,6 @@ class InitUI extends JFrame{
             gbc[i] = new GridBagConstraints();
         }
 		
-		
 		{
 			JPanel msgPanel = initMsgPanel();
 			gbc[0].gridx = 0;
@@ -375,3 +411,42 @@ class InitUI extends JFrame{
     }
 }
 
+
+class Timer extends Thread{
+	int countdownStarter = 60 * 1000;
+
+	public void run(){
+		final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+
+		final Runnable timerGuard = new Runnable() {
+			int guard = 60;
+			@Override
+			public void run() {
+				guard--;
+				countdownStarter = guard * 1000;
+				if(guard < 0 ){
+					guard =60;
+				}
+			}
+			
+		};
+
+		final Runnable runnable = new Runnable() {
+
+            public void run() {
+				float a = (float)countdownStarter/1000.0f;
+				InitUI.labelTimer.setText(Float.toString(a));
+                countdownStarter--;
+
+                if (countdownStarter < 0) {
+					InitUI.labelTimer.setText("REFRESH!!!");
+					countdownStarter =  60 * 1000;
+                }
+            }
+
+			
+        };
+		scheduler.scheduleAtFixedRate(runnable, 0, 1,TimeUnit.MILLISECONDS );
+		scheduler.scheduleAtFixedRate(timerGuard, 0, 1,TimeUnit.SECONDS );
+	}
+}

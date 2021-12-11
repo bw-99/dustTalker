@@ -8,11 +8,10 @@ import javax.swing.JTextArea;
 
 public class ListeningThread extends Thread{
     Socket socket = null;
-    JTextArea textArea = null; 
+
     
-    public ListeningThread(Socket soc, JTextArea textArea){
+    public ListeningThread(Socket soc){
         this.socket = soc;
-        this.textArea = textArea;
     }
 
     public void run(){
@@ -22,7 +21,7 @@ public class ListeningThread extends Thread{
 
             while(true){
                 String chatchat =  reader.readLine() + "\n";
-                textArea.append(chatchat);
+                InitUI.textArea.append(chatchat);
                 System.out.println(chatchat);
             }
         } catch (Exception e) {

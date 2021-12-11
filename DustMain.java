@@ -7,6 +7,7 @@ import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import javax.sound.midi.Track;
 import javax.xml.parsers.DocumentBuilder;
@@ -21,10 +22,9 @@ import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-public class DustMain {
+public class DustMain extends Thread{
     private static ApiClient apiClient = null;
     private Map<String,String> locationMap = new HashMap<String,String>();
-    private String temp;
 
     public static HashMap<String, Double> map;
 
@@ -56,55 +56,63 @@ public class DustMain {
         locationMap.put("관악구", "서남권");
     }
 
-    public void run(String temp) {
-        try {
-            apiClient = new ApiClient(locationMap.get(temp), temp);
-        } catch (MalformedURLException | UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
-
-
-        try {
-            map = apiClient.fetchData();
-            Double pm10 =map.get("PM10");
-            Double pm2_5 = map.get("PM2_5");
-
-            
-
-            Color pm10Color = null;
-            Color pm2_5Color = null;
-            
-            if(pm10 <= 15){
-                pm10Color = Color.BLUE;
-            }else if(pm10 <=50){
-                pm10Color = Color.GREEN;
-            }else if(pm10 <= 100){
-                pm10Color = Color.YELLOW;
-            }else{
-                pm10Color = Color.RED;
+    public void run() {
+        while (true) {
+            MainFrame.ApiLock.lock();
+            try {
+                MainFrame.ApiCondition.await(60,TimeUnit.SECONDS);
+            } catch (InterruptedException e1) {
+                e1.printStackTrace();
             }
-
-
-            if(pm2_5 <= 30){
-                pm2_5Color = Color.BLUE;
-            }else if(pm2_5 <= 80){
-                pm2_5Color = Color.GREEN;
-            }else if(pm2_5 <= 150){
-                pm2_5Color = Color.YELLOW;
-            }else{
-                pm2_5Color = Color.RED;
+            MainFrame.ApiLock.unlock();
+            try {
+                apiClient = new ApiClient(locationMap.get(MainFrame.location), MainFrame.location);
+            } catch (MalformedURLException | UnsupportedEncodingException e) {
+                e.printStackTrace();
             }
-
-            InitUI.Pm10.setBackground(pm10Color);
-            InitUI.Pm2_5.setBackground(pm2_5Color);
-
-            InitUI.Pm10.setText("   "+pm10.toString());
-            InitUI.Pm2_5.setText("   "+pm2_5.toString());
-            
-            
-        } catch (XPathExpressionException | IOException | ParserConfigurationException | SAXException e) {
-            e.printStackTrace();
+    
+    
+            try {
+                map = apiClient.fetchData();
+                Double pm10 =map.get("PM10");
+                Double pm2_5 = map.get("PM2_5");
+    
+                Color pm10Color = null;
+                Color pm2_5Color = null;
+                
+                if(pm10 <= 15){
+                    pm10Color = Color.BLUE;
+                }else if(pm10 <=50){
+                    pm10Color = Color.GREEN;
+                }else if(pm10 <= 100){
+                    pm10Color = Color.YELLOW;
+                }else{
+                    pm10Color = Color.RED;
+                }
+    
+    
+                if(pm2_5 <= 30){
+                    pm2_5Color = Color.BLUE;
+                }else if(pm2_5 <= 80){
+                    pm2_5Color = Color.GREEN;
+                }else if(pm2_5 <= 150){
+                    pm2_5Color = Color.YELLOW;
+                }else{
+                    pm2_5Color = Color.RED;
+                }
+    
+                InitUI.Pm10.setBackground(pm10Color);
+                InitUI.Pm2_5.setBackground(pm2_5Color);
+    
+                InitUI.Pm10.setText("   "+pm10.toString());
+                InitUI.Pm2_5.setText("   "+pm2_5.toString());
+                
+                
+            } catch (XPathExpressionException | IOException | ParserConfigurationException | SAXException e) {
+                e.printStackTrace();
+            }
         }
+        
         
     }
 }

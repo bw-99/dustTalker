@@ -5,19 +5,16 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.util.Scanner;
 
-import javax.swing.JTextArea;
-import javax.swing.JTextField;
+
 
 public class WritingThread extends Thread {
     Socket socket = null;
     Scanner scanner = new Scanner(System.in);
-    JTextArea textArea = null; 
-    JTextField tfMsg = null;
 
-    public WritingThread(Socket soc, JTextArea textArea, JTextField tfMsg){
+
+    public WritingThread(Socket soc){
         this.socket = soc;
-        this.textArea = textArea;
-        this.tfMsg = tfMsg;
+
     }
 
     public void run() {
@@ -30,10 +27,10 @@ public class WritingThread extends Thread {
 
                 MainFrame.newDeposit.await();
                 
-                String chatchat = tfMsg.getText();
-                tfMsg.setText(""); 
+                String chatchat = InitUI.tfMsg.getText();
+                InitUI.tfMsg.setText(""); 
 
-                textArea.append(this.socket.getInetAddress() + "/" + this.socket.getLocalPort() + " : " + chatchat + "\n");
+                InitUI.textArea.append(this.socket.getInetAddress() + "/" + this.socket.getLocalPort() + " : " + chatchat + "\n");
 
                 dos.writeUTF(chatchat);
                 dos.flush();

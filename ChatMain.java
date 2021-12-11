@@ -16,8 +16,8 @@ public class ChatMain extends Thread{
         try {
             Socket soc = new Socket("localhost",5000);
 
-            ListeningThread t1 = new ListeningThread(soc, textArea);
-            WritingThread t2 = new WritingThread(soc, textArea, tfMsg);
+            ListeningThread t1 = new ListeningThread(soc);
+            WritingThread t2 = new WritingThread(soc);
 
             t1.start();
             t2.start();
