@@ -1,46 +1,42 @@
 
 import java.awt.*;
 import java.awt.event.*;
-import java.time.LocalDate;
 import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-
 import javax.swing.*;
 import javax.swing.plaf.DimensionUIResource;
 
 
 public class GuiMain extends Thread {
-
 	public static DustMain  dustMain  = null;
 	public static ChatMain chat = null;
-	public static InitUI initUI= null;
 	public static MainFrame mainFrame = null;
 	public static Timer timer = null;
 
-
     public void run() {
+		
+		// * GUI Thread
 		mainFrame = new MainFrame();
 		mainFrame.start();
 
+		// * Timer Thread
 		timer = new Timer();
 		timer.run();
 
+		// * DustApi Thread
 		MainFrame.ApiLock.lock();
 		dustMain = new DustMain();
 		dustMain.start();
 		MainFrame.ApiCondition.signal();
 		MainFrame.ApiLock.unlock();
 
-		
-
+		// * Timer Thread
 		chat = new ChatMain(InitUI.textArea, InitUI.tfMsg);
 		chat.start();
     }
@@ -48,16 +44,13 @@ public class GuiMain extends Thread {
 
 
 class MainFrame extends Thread{
-	public InitUI initUI = null;
-
 	public static String location = "종로구";
 
-	// Create a lock
+	// * Chat Lock & Condition
 	public static Lock lock = new ReentrantLock();
-	// Create a condition
 	public static Condition newDeposit = lock.newCondition();
 
-
+	// * Api Lock & Condition
 	public static Lock ApiLock = new ReentrantLock();
 	public static Condition ApiCondition = ApiLock.newCondition();
 
@@ -72,28 +65,26 @@ class MainFrame extends Thread{
 }
 
 
+
 class InitUI extends JFrame{
-    public static JTextArea textArea; //멤버 참조변수
-
+    public static JTextArea textArea;
 	private final static int BUTTON_SIZE = 5;
-
 	public static JTextField tfMsg;	
-
 	public static JLabel Pm10 = new JLabel("");
 	public static JLabel Pm2_5 = new JLabel("");
 	public static JLabel O3 = new JLabel("2.0");
 	public static JLabel NO2 = new JLabel("2.0");
 	public static JLabel CO = new JLabel("2.0");
 	public static JLabel SO2 = new JLabel("2.0");
-
 	public static JPanel dp= null;
 	public static JLabel labelTimer = new JLabel("timer");
+	public static JScrollBar cursor = null;
 
-	public JScrollBar cursor = null;
 	private ArrayList<JButton> locButtons = new ArrayList();
 
 	JButton btnSend;
 
+	// * Message Input UI
     private JPanel initMsgPanel(){
         JPanel msgPanel = new JPanel();
 		msgPanel.setLayout(new BorderLayout());
@@ -104,7 +95,6 @@ class InitUI extends JFrame{
         msgPanel.add(tfMsg, BorderLayout.CENTER);
 		msgPanel.add(btnSend, BorderLayout.EAST);
 
-        //send 버튼 클릭에 반응하는 리스너 추가
 		btnSend.addActionListener(new ActionListener() {			
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -126,11 +116,10 @@ class InitUI extends JFrame{
 		});
 		tfMsg.requestFocus();
 
-
         return msgPanel;
     }
 
-	
+	// * Add Seoul Location in locs
 	private void addLocation(String[] locs, JPanel dust){
 	
 		for(int i=0;i<locs.length;i++){
@@ -146,6 +135,8 @@ class InitUI extends JFrame{
 
 				@Override
 				public void actionPerformed(ActionEvent e) {
+					InitUI.textArea.append("[ADMIN]" + " [" +LocalTime.now() +"] : Selected  " + "\"" + location + "\"\n");
+				
 					MainFrame.ApiLock.lock();
 					MainFrame.location = location;
 					MainFrame.ApiCondition.signal();
@@ -159,12 +150,7 @@ class InitUI extends JFrame{
 					temp.setBackground(Color.BLUE);
 					temp.setForeground(Color.WHITE);
 
-					// try {
-					// 	GuiMain.timer.sleep(100);
-					// } catch (InterruptedException e1) {
-					// 	e1.printStackTrace();
-					// }
-					// GuiMain.timer.interrupt();
+					
 					GuiMain.timer.initTimer();
 				
 				}
@@ -176,6 +162,7 @@ class InitUI extends JFrame{
 		return;
 	}
 
+	// * BLUE, GREEN, YELLOW, RED LINE UI
 	private void addCriterioLine(){
 		JLabel blueLabel = new JLabel("          ");
 		JLabel greenLabel = new JLabel("          ");
@@ -188,6 +175,7 @@ class InitUI extends JFrame{
 		JLabel yellowLabelEx = new JLabel("나쁨");
 		JLabel redLabelEx = new JLabel("매우 나쁨");
 
+		// * blue
 		{
 			blueLabel.setOpaque(true);
 			blueLabel.setBackground(Color.BLUE);
@@ -200,6 +188,7 @@ class InitUI extends JFrame{
 			this.add(blueLabelEx);
 		}
 		
+		// * green
 		{
 			greenLabel.setOpaque(true);
 			greenLabel.setBackground(Color.GREEN);
@@ -213,6 +202,7 @@ class InitUI extends JFrame{
 			this.add(greenLabelEx);
 		}
 
+		// * yellow
 		{
 			yellowLabel.setOpaque(true);
 			yellowLabel.setBackground(Color.YELLOW);
@@ -225,6 +215,7 @@ class InitUI extends JFrame{
 			this.add(yellowLabelEx);
 		}
 
+		// * red
 		{
 			redLabel.setOpaque(true);
 			redLabel.setBackground(Color.RED);
@@ -236,8 +227,9 @@ class InitUI extends JFrame{
 			redLabelEx.setSize(100,15);
 			this.add(redLabelEx);
 		}
-	}
+	}	
 
+	// * Dust Main UI
 	private JPanel initDustMainPanel() throws InterruptedException{
 		JPanel dustMain = new JPanel();
 
@@ -254,7 +246,6 @@ class InitUI extends JFrame{
 		
 		JLabel labelPm10 = new JLabel("        PM 10");
 		JLabel labelPm2_5 = new JLabel("        PM 2.5");
-		// JLabel labeTimerAid = new JLabel("REFRESH : ");
 
 		{
 			labelPm10.setBackground(Color.RED);
@@ -277,16 +268,6 @@ class InitUI extends JFrame{
 			labelTimer.setSize(200,50);
 			this.add(labelTimer);
 		}
-		// {
-		// 	labeTimerAid.setBackground(Color.WHITE);
-		// 	labeTimerAid.setForeground(Color.BLACK);
-		// 	labeTimerAid.setOpaque(true);
-		// 	labeTimerAid.setFont(new Font("Serif",Font.BOLD,30));
-		// 	labeTimerAid.setLocation(800, 130);
-		// 	labeTimerAid.setSize(200,50);
-		// 	this.add(labeTimerAid);
-		// }
-
 		{
 			Pm10.setFont(new Font("Serif",Font.BOLD,30));
 			Pm10.setLocation(210, 130);
@@ -294,7 +275,6 @@ class InitUI extends JFrame{
 			Pm10.setOpaque(true);
 			this.add(Pm10);
 		}
-
 		{
 			labelPm2_5.setFont(new Font("Serif",Font.BOLD,30));
 			labelPm2_5.setForeground(Color.BLUE);
@@ -313,9 +293,7 @@ class InitUI extends JFrame{
 			Pm2_5.setSize(100,50);
 			this.add(Pm2_5);
 		}
-
 		addCriterioLine();
-
 		return dustMain;
 	}
 
@@ -325,40 +303,33 @@ class InitUI extends JFrame{
 		// 도심권
 		String[] loc = {"종로구","중구","용산구"};
 		addLocation(loc, dust);
-
 		//동북권
 		String[] loc2 = {"광진구","성동구","중랑구","동대문구","성북구"};
 		addLocation(loc2, dust);
-
 		//동남권
 		String[] loc3 = {"강남구","서초구","송파구","강동구"};
 		addLocation(loc3, dust);
-		
 		//서북권
 		String[] loc4 = {"은평구","서대문구","마포구"};
 		addLocation(loc4, dust);
-		
 		//서남권
 		String[] loc5 = {"강서구","구로구","영등포구","동작구","관악구"};
 		addLocation(loc5, dust);
-		
-
 		return dust;
 	}
 
+
+	// * Constructor
     InitUI() throws InterruptedException{
         JPanel pn = new JPanel();
 		setTitle("Dust Talker");
-       
 		GridBagConstraints[] gbc = new GridBagConstraints[BUTTON_SIZE];
-
         GridBagLayout gbl = new GridBagLayout();
         pn.setLayout(gbl);
-
 		for (int i = 0; i < BUTTON_SIZE; i++) {
             gbc[i] = new GridBagConstraints();
         }
-		
+		// * Message Input UI
 		{
 			JPanel msgPanel = initMsgPanel();
 			gbc[0].gridx = 0;
@@ -368,11 +339,10 @@ class InitUI extends JFrame{
 			gbc[0].fill = GridBagConstraints.BOTH;
 			pn.add(msgPanel,gbc[0]);
 		}
-		
-
+		// * Message Area UI
 		{	
 			textArea = new JTextArea();		
-			textArea.setEditable(false); //쓰기 금지
+			textArea.setEditable(false);
 			JScrollPane scrollPane = new JScrollPane(textArea);
 			cursor = scrollPane.getVerticalScrollBar();
 			gbc[1].gridx = 0;
@@ -382,7 +352,7 @@ class InitUI extends JFrame{
 			gbc[1].fill = GridBagConstraints.BOTH;
 			pn.add(scrollPane,gbc[1]);
 		}
-
+		// * Dust Menu UI
 		{
 			JPanel dust = initDustMenuPanel();
 			dust.setBackground(Color.WHITE);
@@ -393,7 +363,7 @@ class InitUI extends JFrame{
 			gbc[2].fill = GridBagConstraints.BOTH;
 			pn.add(dust,gbc[2]);
 		}
-
+		// * Dust Main UI
 		{
 			dp = initDustMainPanel();
 			dp.setBackground(Color.white);
@@ -404,12 +374,19 @@ class InitUI extends JFrame{
 			gbc[3].fill = GridBagConstraints.BOTH;
 			pn.add(dp,gbc[3]);
 		}
-		
 		add(pn);
 		setSize(1000,600);
     	setVisible(true);
     }
 
+
+	// * Move Cursor To End
+	public static void cursorMaximum(){
+		cursor.setValue(cursor.getMaximum());
+		return;
+	}
+
+	// * Send Chat
     void sendMessage() {	
         MainFrame.lock.lock();
         String msg = tfMsg.getText();
@@ -420,39 +397,37 @@ class InitUI extends JFrame{
 			MainFrame.newDeposit.signal();
 			MainFrame.lock.unlock();
 		}
-		cursor.setValue(cursor.getMaximum());
+		cursorMaximum();
     }
 }
 
 
 class Timer extends Thread{
-
-	
 	int countdownStarter = 60 * 1000;
 	int guard = 60;
+	final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
 	public Timer(){
 		countdownStarter = 60 * 1000;	
 		guard = 60;
 	}
 
+	// * initiating
 	public void initTimer(){
 		countdownStarter = 60 * 1000;	
 		guard = 60;
 	}
 
-	final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-
-	private ScheduledFuture job1 = null;
-	private ScheduledFuture job2 = null;
-
+	
+	// * Correcting Timer In A Second
 	final Runnable timerGuard = new Runnable() {
 		@Override
 		public void run() {
 			guard--;
 			countdownStarter = guard * 1000;
 			if(guard == 0){
-				InitUI.textArea.append("[ADMIN] DUST UPDATED [" + LocalTime.now() + "]\n");
+				InitUI.textArea.append("[ADMIN][" + LocalTime.now() + "] : DUST UPDATED\n");
+				InitUI.cursorMaximum();
 			}
 			else if(guard < 0 ){
 				guard =60;
@@ -461,6 +436,7 @@ class Timer extends Thread{
 		
 	};
 
+	// * Timer In A Ms
 	final Runnable runnable = new Runnable() {
 		@Override
 		public void run() {
@@ -472,12 +448,10 @@ class Timer extends Thread{
 				countdownStarter =  60 * 1000;
 			}
 		}
-
-		
 	};
 
 	public void run(){
-		this.job1 = scheduler.scheduleAtFixedRate(runnable, 0, 1,TimeUnit.MILLISECONDS );
-		this.job2 = scheduler.scheduleAtFixedRate(timerGuard, 0, 1,TimeUnit.SECONDS );
+		scheduler.scheduleAtFixedRate(runnable, 0, 1,TimeUnit.MILLISECONDS );
+		scheduler.scheduleAtFixedRate(timerGuard, 0, 1,TimeUnit.SECONDS );
 	}
 }

@@ -4,6 +4,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.time.LocalTime;
 
 
 public class ServerTread extends Thread{
@@ -40,7 +41,7 @@ public class ServerTread extends Thread{
                     if(ServerMain.threadList.get(i).second().getPort() != origPort || !(ServerMain.threadList.get(i).second().getInetAddress().equals(soc.getInetAddress()))){
                         OutputStream newOut = ServerMain.threadList.get(i).second().getOutputStream();
                         PrintWriter newDot = new PrintWriter(newOut,true);
-                        newDot.println(soc.getInetAddress()  + "/"+  soc.getPort()  + " : " +chatchat);
+                        newDot.println("[" + soc.getInetAddress()  + "/"+  soc.getPort()  + "] ["+ LocalTime.now()  +"]" + " : " +chatchat);
                     }
                     if(isFirst){
                         isFirst = false;

@@ -4,8 +4,6 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-import javax.naming.ldap.SortKey;
-
 public class ServerMain {
     private static Integer SERVER_PORT = 5000;
     private static ServerSocket ss = null;
@@ -33,8 +31,6 @@ public class ServerMain {
 
     public static void main(String[] args) throws IOException, InterruptedException {
         initServerSocket();
-
-
         while (true) {
             Socket soc = ss.accept();
             Thread t = new ServerTread(soc,tid++);

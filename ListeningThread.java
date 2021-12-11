@@ -4,11 +4,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.Socket;
 
-import javax.swing.JTextArea;
-
 public class ListeningThread extends Thread{
     Socket socket = null;
-
     
     public ListeningThread(Socket soc){
         this.socket = soc;
@@ -22,6 +19,7 @@ public class ListeningThread extends Thread{
             while(true){
                 String chatchat =  reader.readLine() + "\n";
                 InitUI.textArea.append(chatchat);
+                InitUI.cursorMaximum();
                 System.out.println(chatchat);
             }
         } catch (Exception e) {
