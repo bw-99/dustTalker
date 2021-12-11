@@ -4,12 +4,9 @@ import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-
-import javax.sound.midi.Track;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -65,6 +62,7 @@ public class DustMain extends Thread{
                 e1.printStackTrace();
             }
             MainFrame.ApiLock.unlock();
+
             try {
                 apiClient = new ApiClient(locationMap.get(MainFrame.location), MainFrame.location);
             } catch (MalformedURLException | UnsupportedEncodingException e) {
@@ -106,7 +104,7 @@ public class DustMain extends Thread{
     
                 InitUI.Pm10.setText("   "+pm10.toString());
                 InitUI.Pm2_5.setText("   "+pm2_5.toString());
-                
+
                 
             } catch (XPathExpressionException | IOException | ParserConfigurationException | SAXException e) {
                 e.printStackTrace();

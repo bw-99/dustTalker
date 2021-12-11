@@ -30,11 +30,8 @@ public class GuiMain extends Thread {
 		timer.run();
 
 		// * DustApi Thread
-		MainFrame.ApiLock.lock();
 		dustMain = new DustMain();
 		dustMain.start();
-		MainFrame.ApiCondition.signal();
-		MainFrame.ApiLock.unlock();
 
 		// * Timer Thread
 		chat = new ChatMain(InitUI.textArea, InitUI.tfMsg);
@@ -84,6 +81,91 @@ class InitUI extends JFrame{
 
 	JButton btnSend;
 
+	private void initFetch(){
+				
+		MainFrame.ApiLock.lock();
+		MainFrame.location = "종로구";
+		MainFrame.ApiCondition.signal();
+		MainFrame.ApiLock.unlock();
+
+		InitUI.textArea.append("[ADMIN]" + " [" +LocalTime.now() +"] : Selected  " + "\"종로구\"\n");
+
+
+		for(int i=0;i<locButtons.size();i++){
+			locButtons.get(i).setBackground(Color.WHITE);
+			locButtons.get(i).setForeground(Color.BLACK);
+		}
+
+		locButtons.get(0).setBackground(Color.BLUE);
+		locButtons.get(0).setForeground(Color.WHITE);
+		
+		GuiMain.timer.initTimer();
+		return;
+	}
+
+	// * Constructor
+    InitUI() throws InterruptedException{
+        JPanel pn = new JPanel();
+		setTitle("Dust Talker");
+		GridBagConstraints[] gbc = new GridBagConstraints[BUTTON_SIZE];
+        GridBagLayout gbl = new GridBagLayout();
+        pn.setLayout(gbl);
+		for (int i = 0; i < BUTTON_SIZE; i++) {
+            gbc[i] = new GridBagConstraints();
+        }
+		// * Message Input UI
+		{
+			JPanel msgPanel = initMsgPanel();
+			gbc[0].gridx = 0;
+			gbc[0].gridy = 5;
+			gbc[0].weightx = 4;
+			gbc[0].weighty = 0.1;
+			gbc[0].fill = GridBagConstraints.BOTH;
+			pn.add(msgPanel,gbc[0]);
+		}
+		// * Message Area UI
+		{	
+			textArea = new JTextArea();		
+			textArea.setEditable(false);
+			JScrollPane scrollPane = new JScrollPane(textArea);
+			cursor = scrollPane.getVerticalScrollBar();
+			gbc[1].gridx = 0;
+			gbc[1].gridy = 2;
+			gbc[1].weightx = 4;
+			gbc[1].weighty = 2;
+			gbc[1].fill = GridBagConstraints.BOTH;
+			pn.add(scrollPane,gbc[1]);
+		}
+		// * Dust Menu UI
+		{
+			JPanel dust = initDustMenuPanel();
+			dust.setBackground(Color.WHITE);
+			gbc[2].gridx = 0;
+			gbc[2].gridy = 0;
+			gbc[2].weightx = 4;
+			gbc[2].weighty = 1;
+			gbc[2].fill = GridBagConstraints.BOTH;
+			pn.add(dust,gbc[2]);
+		}
+		// * Dust Main UI
+		{
+			dp = initDustMainPanel();
+			dp.setBackground(Color.white);
+			gbc[3].gridx = 0;
+			gbc[3].gridy = 1;
+			gbc[3].weightx = 4;
+			gbc[3].weighty = 2;
+			gbc[3].fill = GridBagConstraints.BOTH;
+			pn.add(dp,gbc[3]);
+		}
+
+		initFetch();
+
+		add(pn);
+		setSize(1000,600);
+    	setVisible(true);
+    }
+
 	// * Message Input UI
     private JPanel initMsgPanel(){
         JPanel msgPanel = new JPanel();
@@ -116,6 +198,9 @@ class InitUI extends JFrame{
 		});
 		tfMsg.requestFocus();
 
+
+
+
         return msgPanel;
     }
 
@@ -136,7 +221,8 @@ class InitUI extends JFrame{
 				@Override
 				public void actionPerformed(ActionEvent e) {
 					InitUI.textArea.append("[ADMIN]" + " [" +LocalTime.now() +"] : Selected  " + "\"" + location + "\"\n");
-				
+					cursorMaximum();
+
 					MainFrame.ApiLock.lock();
 					MainFrame.location = location;
 					MainFrame.ApiCondition.signal();
@@ -319,65 +405,7 @@ class InitUI extends JFrame{
 	}
 
 
-	// * Constructor
-    InitUI() throws InterruptedException{
-        JPanel pn = new JPanel();
-		setTitle("Dust Talker");
-		GridBagConstraints[] gbc = new GridBagConstraints[BUTTON_SIZE];
-        GridBagLayout gbl = new GridBagLayout();
-        pn.setLayout(gbl);
-		for (int i = 0; i < BUTTON_SIZE; i++) {
-            gbc[i] = new GridBagConstraints();
-        }
-		// * Message Input UI
-		{
-			JPanel msgPanel = initMsgPanel();
-			gbc[0].gridx = 0;
-			gbc[0].gridy = 5;
-			gbc[0].weightx = 4;
-			gbc[0].weighty = 0.1;
-			gbc[0].fill = GridBagConstraints.BOTH;
-			pn.add(msgPanel,gbc[0]);
-		}
-		// * Message Area UI
-		{	
-			textArea = new JTextArea();		
-			textArea.setEditable(false);
-			JScrollPane scrollPane = new JScrollPane(textArea);
-			cursor = scrollPane.getVerticalScrollBar();
-			gbc[1].gridx = 0;
-			gbc[1].gridy = 2;
-			gbc[1].weightx = 4;
-			gbc[1].weighty = 2;
-			gbc[1].fill = GridBagConstraints.BOTH;
-			pn.add(scrollPane,gbc[1]);
-		}
-		// * Dust Menu UI
-		{
-			JPanel dust = initDustMenuPanel();
-			dust.setBackground(Color.WHITE);
-			gbc[2].gridx = 0;
-			gbc[2].gridy = 0;
-			gbc[2].weightx = 4;
-			gbc[2].weighty = 1;
-			gbc[2].fill = GridBagConstraints.BOTH;
-			pn.add(dust,gbc[2]);
-		}
-		// * Dust Main UI
-		{
-			dp = initDustMainPanel();
-			dp.setBackground(Color.white);
-			gbc[3].gridx = 0;
-			gbc[3].gridy = 1;
-			gbc[3].weightx = 4;
-			gbc[3].weighty = 2;
-			gbc[3].fill = GridBagConstraints.BOTH;
-			pn.add(dp,gbc[3]);
-		}
-		add(pn);
-		setSize(1000,600);
-    	setVisible(true);
-    }
+	
 
 
 	// * Move Cursor To End

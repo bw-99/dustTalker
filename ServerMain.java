@@ -10,6 +10,7 @@ public class ServerMain {
     public static ArrayList<Pair> threadList = new ArrayList<Pair>();
     private static Integer tid = 0;
 
+    // * Create Server Socket
     private static void initServerSocket(){
         try {
             ss = new ServerSocket(SERVER_PORT);            
@@ -18,6 +19,7 @@ public class ServerMain {
         }
     }
 
+    // * Manage Thread
     private static void manageThread(){
         Pair temp = null;
         Iterator<Pair> iter = threadList.iterator();
@@ -36,10 +38,7 @@ public class ServerMain {
             Thread t = new ServerTread(soc,tid++);
             Pair pp = new Pair(t, soc);
             threadList.add(pp);
-            System.out.println("accepted!!");
-
             t.start();     
-    
             manageThread();
         }
     }
