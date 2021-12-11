@@ -12,10 +12,8 @@ public class clientMain {
         
 
         try {
-            DustMain dustMain = new DustMain();
             GuiMain guiMain = new GuiMain();
             guiMain.start();
-            // chat.start();    
         } catch (Exception e) {
             e.printStackTrace();
         }
