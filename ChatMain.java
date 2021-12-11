@@ -30,7 +30,6 @@ public class ChatMain extends Thread{
             e.printStackTrace();
         }
 
-        System.out.println("fuinish");
         
     }
 }

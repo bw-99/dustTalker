@@ -1,9 +1,13 @@
 
 import java.awt.*;
 import java.awt.event.*;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
@@ -135,7 +139,7 @@ class InitUI extends JFrame{
 			JButton temp = new JButton(location);
 			temp.setFont(new Font("Serif",Font.BOLD,15));
 			temp.setPreferredSize(new DimensionUIResource(100, 30));
-			temp.setBackground(Color.WHITE);
+			temp.setBackground(Color.LIGHT_GRAY);
 			temp.setForeground(Color.BLACK);
 			
 			temp.addActionListener(new ActionListener(){
@@ -154,6 +158,14 @@ class InitUI extends JFrame{
 
 					temp.setBackground(Color.BLUE);
 					temp.setForeground(Color.WHITE);
+
+					// try {
+					// 	GuiMain.timer.sleep(100);
+					// } catch (InterruptedException e1) {
+					// 	e1.printStackTrace();
+					// }
+					// GuiMain.timer.interrupt();
+					GuiMain.timer.initTimer();
 				
 				}
 				
@@ -260,8 +272,8 @@ class InitUI extends JFrame{
 			labelTimer.setBackground(Color.WHITE);
 			labelTimer.setForeground(Color.BLACK);
 			labelTimer.setOpaque(true);
-			labelTimer.setLocation(900, 130);
-			labelTimer.setFont(new Font("Serif",Font.BOLD,30));
+			labelTimer.setLocation(770,260);
+			labelTimer.setFont(new Font("Serif",Font.BOLD,20));
 			labelTimer.setSize(200,50);
 			this.add(labelTimer);
 		}
@@ -336,6 +348,7 @@ class InitUI extends JFrame{
 
     InitUI() throws InterruptedException{
         JPanel pn = new JPanel();
+		setTitle("Dust Talker");
        
 		GridBagConstraints[] gbc = new GridBagConstraints[BUTTON_SIZE];
 
@@ -413,40 +426,58 @@ class InitUI extends JFrame{
 
 
 class Timer extends Thread{
+
+	
 	int countdownStarter = 60 * 1000;
+	int guard = 60;
+
+	public Timer(){
+		countdownStarter = 60 * 1000;	
+		guard = 60;
+	}
+
+	public void initTimer(){
+		countdownStarter = 60 * 1000;	
+		guard = 60;
+	}
+
+	final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+
+	private ScheduledFuture job1 = null;
+	private ScheduledFuture job2 = null;
+
+	final Runnable timerGuard = new Runnable() {
+		@Override
+		public void run() {
+			guard--;
+			countdownStarter = guard * 1000;
+			if(guard == 0){
+				InitUI.textArea.append("[ADMIN] DUST UPDATED [" + LocalTime.now() + "]\n");
+			}
+			else if(guard < 0 ){
+				guard =60;
+			}
+		}
+		
+	};
+
+	final Runnable runnable = new Runnable() {
+		@Override
+		public void run() {
+			float a = (float)countdownStarter/1000.0f;
+			InitUI.labelTimer.setText("Refresh Timer : " + Float.toString(a));
+			countdownStarter--;
+
+			if (countdownStarter < 0) {
+				countdownStarter =  60 * 1000;
+			}
+		}
+
+		
+	};
 
 	public void run(){
-		final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-
-		final Runnable timerGuard = new Runnable() {
-			int guard = 60;
-			@Override
-			public void run() {
-				guard--;
-				countdownStarter = guard * 1000;
-				if(guard < 0 ){
-					guard =60;
-				}
-			}
-			
-		};
-
-		final Runnable runnable = new Runnable() {
-
-            public void run() {
-				float a = (float)countdownStarter/1000.0f;
-				InitUI.labelTimer.setText(Float.toString(a));
-                countdownStarter--;
-
-                if (countdownStarter < 0) {
-					InitUI.labelTimer.setText("REFRESH!!!");
-					countdownStarter =  60 * 1000;
-                }
-            }
-
-			
-        };
-		scheduler.scheduleAtFixedRate(runnable, 0, 1,TimeUnit.MILLISECONDS );
-		scheduler.scheduleAtFixedRate(timerGuard, 0, 1,TimeUnit.SECONDS );
+		this.job1 = scheduler.scheduleAtFixedRate(runnable, 0, 1,TimeUnit.MILLISECONDS );
+		this.job2 = scheduler.scheduleAtFixedRate(timerGuard, 0, 1,TimeUnit.SECONDS );
 	}
 }
