@@ -1,3 +1,4 @@
+import java.awt.Color;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
@@ -25,7 +26,7 @@ public class DustMain {
     private Map<String,String> locationMap = new HashMap<String,String>();
     private String temp;
 
-    public static HashMap<String, String> map;
+    public static HashMap<String, Double> map;
 
     public DustMain(){
 
@@ -65,7 +66,42 @@ public class DustMain {
 
         try {
             map = apiClient.fetchData();
-            System.out.println(map.get("PM10"));
+            Double pm10 =map.get("PM10");
+            Double pm2_5 = map.get("PM2_5");
+
+            
+
+            Color pm10Color = null;
+            Color pm2_5Color = null;
+            
+            if(pm10 <= 15){
+                pm10Color = Color.BLUE;
+            }else if(pm10 <=50){
+                pm10Color = Color.GREEN;
+            }else if(pm10 <= 100){
+                pm10Color = Color.YELLOW;
+            }else{
+                pm10Color = Color.RED;
+            }
+
+
+            if(pm2_5 <= 30){
+                pm2_5Color = Color.BLUE;
+            }else if(pm2_5 <= 80){
+                pm2_5Color = Color.GREEN;
+            }else if(pm2_5 <= 150){
+                pm2_5Color = Color.YELLOW;
+            }else{
+                pm2_5Color = Color.RED;
+            }
+
+            InitUI.Pm10.setBackground(pm10Color);
+            InitUI.Pm2_5.setBackground(pm2_5Color);
+
+            InitUI.Pm10.setText("   "+pm10.toString());
+            InitUI.Pm2_5.setText("   "+pm2_5.toString());
+            
+            
         } catch (XPathExpressionException | IOException | ParserConfigurationException | SAXException e) {
             e.printStackTrace();
         }
@@ -94,7 +130,7 @@ class ApiClient{
     }
 
 
-    public  HashMap<String,String> fetchData() throws IOException, ParserConfigurationException, SAXException, XPathExpressionException{
+    public  HashMap<String,Double> fetchData() throws IOException, ParserConfigurationException, SAXException, XPathExpressionException{
         
         String dataString = apiUrl.toString();
         DocumentBuilderFactory dbFactoty = DocumentBuilderFactory.newInstance();
@@ -106,7 +142,7 @@ class ApiClient{
         NodeList MSRRGN_NM = (NodeList)xPath.evaluate("//row/MSRRGN_NM", doc, XPathConstants.NODESET );
         NodeList MSRSTE_NM = (NodeList)xPath.evaluate("//row/MSRSTE_NM", doc, XPathConstants.NODESET );
         NodeList PM10 = (NodeList)xPath.evaluate("//row/PM10", doc, XPathConstants.NODESET );
-        NodeList PM25 = (NodeList)xPath.evaluate("//row/PM25", doc, XPathConstants.NODESET );
+        NodeList PM2_5 = (NodeList)xPath.evaluate("//row/PM25", doc, XPathConstants.NODESET );
         NodeList O3 = (NodeList)xPath.evaluate("//row/O3", doc, XPathConstants.NODESET );
         NodeList NO2 = (NodeList)xPath.evaluate("//row/NO2", doc, XPathConstants.NODESET );
         NodeList CO = (NodeList)xPath.evaluate("//row/CO", doc, XPathConstants.NODESET );
@@ -115,23 +151,22 @@ class ApiClient{
         NodeList IDEX_MVL = (NodeList)xPath.evaluate("//row/IDEX_MVL", doc, XPathConstants.NODESET );
         NodeList APPLT_MAIN = (NodeList)xPath.evaluate("//row/APPLT_MAIN", doc, XPathConstants.NODESET );
 
-        // InitUI.Pm10.setText("asdfasdf");
-        // InitUI.Pm2_5.setText("asdfasdf");
         
-        HashMap<String,String> map = new HashMap<>();
+        
+        HashMap<String, Double> map = new HashMap<>();
 
         for(int i = 0; i < items.getLength(); i++)
         {
-            map.put("MSRRGN_NM",MSRRGN_NM.item(i).getTextContent());
-            map.put("MSRSTE_NM",MSRSTE_NM.item(i).getTextContent());
-            map.put("PM10",PM10.item(i).getTextContent());
-            map.put("PM2_5",PM25.item(i).getTextContent());
-            map.put("O3",O3.item(i).getTextContent());
-            map.put("NO2",NO2.item(i).getTextContent());
-            map.put("CO",CO.item(i).getTextContent());
-            map.put("SO2",SO2.item(i).getTextContent());
-            map.put("IDEX_NM",IDEX_NM.item(i).getTextContent());
-            map.put("IDEX_MVL",IDEX_MVL.item(i).getTextContent());
+            // map.put("MSRRGN_NM",Double.parseDouble(MSRRGN_NM.item(i).getTextContent()) );
+            // map.put("MSRSTE_NM",Double.parseDouble(MSRSTE_NM.item(i).getTextContent()));
+            map.put("PM10",Double.parseDouble(PM10.item(i).getTextContent()));
+            map.put("PM2_5",Double.parseDouble(PM2_5.item(i).getTextContent()));
+            map.put("O3",Double.parseDouble(O3.item(i).getTextContent()));
+            map.put("NO2",Double.parseDouble(NO2.item(i).getTextContent()));
+            map.put("CO",Double.parseDouble(CO.item(i).getTextContent()));
+            map.put("SO2",Double.parseDouble(SO2.item(i).getTextContent()));
+            // map.put("IDEX_NM",Double.parseDouble(IDEX_NM.item(i).getTextContent()));
+            // map.put("IDEX_MVL",Double.parseDouble(IDEX_MVL.item(i).getTextContent()));
             // map.put("APPLT_MAIN",APPLT_MAIN.item(i).getTextContent());
         }   
 

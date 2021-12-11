@@ -1,6 +1,7 @@
 
 import java.awt.*;
 import java.awt.event.*;
+import java.util.ArrayList;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -13,61 +14,40 @@ public class GuiMain extends Thread {
 
 	public static DustMain  dustMain  = null;
 	public static ChatMain chat = null;
+	public static InitUI initUI= null;
+	public static MainFrame mainFrame = null;
 
 	public GuiMain(){
+
 		dustMain = new DustMain();
 		dustMain.run("종로구");
-		chat = new ChatMain(InitUI.textArea, InitUI.tfMsg);
+		mainFrame = new MainFrame();
 	}
 
     public void run() {
-        MainFrame mf = new MainFrame();
-		try {
-			mf.initUI = new InitUI(mf);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-        
-        chat.run();
-
+		mainFrame.run();
+		chat = new ChatMain(InitUI.textArea, InitUI.tfMsg);
+		chat.run();
     }
 }
 
 
-class MainFrame extends JFrame{
+class MainFrame extends Thread{
 	public InitUI initUI = null;
-	public DustTalkUI dustTalkUI = null;
-
 
 	public static String location = "종로구";
 
 	// Create a lock
 	public static Lock lock = new ReentrantLock();
-	
 	// Create a condition
 	public static Condition newDeposit = lock.newCondition();
 
-	// public static Lock dustLock = new ReentrantLock();
 
-	// public static Condition dustDeposit = lock.newCondition();
-
-
-	// public static Lock dustRun = new ReentrantLock();
-
-	// public static Condition dustRunDeposit = lock.newCondition();
-
-	public void change(String panelName){
-		if(panelName.equals("initUI")){
-			getContentPane().removeAll();
-			getContentPane().add(initUI);
-			revalidate();
-			repaint();
-		}
-		else {
-			getContentPane().removeAll();
-			getContentPane().add(dustTalkUI);
-			revalidate();
-			repaint();
+	public void run(){
+		try {
+			new InitUI();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
 		}
 	}
 }
@@ -78,16 +58,18 @@ class InitUI extends JFrame{
 
 	private final static int BUTTON_SIZE = 5;
 
-	public static JTextField tfMsg;
-
-	private MainFrame mf;
-
-	private JPanel dustPanel = null;
-	
+	public static JTextField tfMsg;	
 
 	public static JLabel Pm10 = new JLabel("1.0");
-
 	public static JLabel Pm2_5 = new JLabel("2.0");
+	public static JLabel O3 = new JLabel("2.0");
+	public static JLabel NO2 = new JLabel("2.0");
+	public static JLabel CO = new JLabel("2.0");
+	public static JLabel SO2 = new JLabel("2.0");
+
+	public static JPanel dp= null;
+
+	public JScrollBar cursor = null;
 
     
 
@@ -130,33 +112,104 @@ class InitUI extends JFrame{
         return msgPanel;
     }
 
+	private ArrayList<JButton> locButtons = new ArrayList();
 	private void addLocation(String[] locs, JPanel dust){
+	
 		for(int i=0;i<locs.length;i++){
 			String location = locs[i];
 
 			JButton temp = new JButton(location);
+			temp.setFont(new Font("Serif",Font.BOLD,15));
 			temp.setPreferredSize(new DimensionUIResource(100, 30));
+			temp.setBackground(Color.WHITE);
+			temp.setForeground(Color.BLACK);
+			
 			temp.addActionListener(new ActionListener(){
 
 				@Override
 				public void actionPerformed(ActionEvent e) {
 					GuiMain.dustMain.run(location);
-					Pm10.setText(DustMain.map.get("PM10"));
-					Pm2_5.setText(DustMain.map.get("PM2_5"));
+					
+					for(int i=0;i<locButtons.size();i++){
+						locButtons.get(i).setBackground(Color.WHITE);
+						locButtons.get(i).setForeground(Color.BLACK);
+					}
+
+					temp.setBackground(Color.BLUE);
+					temp.setForeground(Color.WHITE);
+				
 				}
 				
 			});
+			locButtons.add(temp);
 			dust.add(temp);
 		}
 		return;
 	}
 
-	private JPanel initDustMainPanel() throws InterruptedException{
-		// MainFrame.dustLock.lock();
+	private void addCriterioLine(){
+		JLabel blueLabel = new JLabel("          ");
+		JLabel greenLabel = new JLabel("          ");
+		JLabel yellowLabel = new JLabel("          ");
+		JLabel redLabel = new JLabel("          ");
 
-		// MainFrame.dustDeposit.await();
 
+		JLabel blueLabelEx = new JLabel("좋음");
+		JLabel greenLabelEx = new JLabel("보통");
+		JLabel yellowLabelEx = new JLabel("나쁨");
+		JLabel redLabelEx = new JLabel("매우 나쁨");
+
+		{
+			blueLabel.setOpaque(true);
+			blueLabel.setBackground(Color.BLUE);
+			blueLabel.setLocation(10, 200);
+			blueLabel.setSize(100,15);
+			this.add(blueLabel);
+
+			blueLabelEx.setLocation(150, 200);
+			blueLabelEx.setSize(100,15);
+			this.add(blueLabelEx);
+		}
 		
+		{
+			greenLabel.setOpaque(true);
+			greenLabel.setBackground(Color.GREEN);
+			greenLabel.setLocation(10, 230);
+			greenLabel.setSize(100,15);
+			this.add(greenLabel);
+
+			greenLabelEx.setLocation(150, 230);
+			greenLabelEx.setSize(100,15);
+
+			this.add(greenLabelEx);
+		}
+
+		{
+			yellowLabel.setOpaque(true);
+			yellowLabel.setBackground(Color.YELLOW);
+			yellowLabel.setLocation(10, 260);
+			yellowLabel.setSize(100,15);
+			this.add(yellowLabel);
+
+			yellowLabelEx.setLocation(150, 260);
+			yellowLabelEx.setSize(100,15);
+			this.add(yellowLabelEx);
+		}
+
+		{
+			redLabel.setOpaque(true);
+			redLabel.setBackground(Color.RED);
+			redLabel.setLocation(10, 290);
+			redLabel.setSize(100,15);
+			this.add(redLabel);
+
+			redLabelEx.setLocation(150, 290);
+			redLabelEx.setSize(100,15);
+			this.add(redLabelEx);
+		}
+	}
+
+	private JPanel initDustMainPanel() throws InterruptedException{
 		JPanel dustMain = new JPanel();
 
         GridBagConstraints[] gbc_main = new GridBagConstraints[BUTTON_SIZE];
@@ -170,48 +223,49 @@ class InitUI extends JFrame{
 
 		dustMain.setBackground(Color.BLUE);
 		
-		JLabel labelPm10 = new JLabel("PM 10");
-		JLabel labelPm2_5 = new JLabel("PM 2.5");
-
+		JLabel labelPm10 = new JLabel("        PM 10");
+		JLabel labelPm2_5 = new JLabel("        PM 2.5");
 
 		{
 			labelPm10.setBackground(Color.RED);
-			labelPm10.setFont(new Font("Serif",Font.BOLD,20));
+			labelPm10.setFont(new Font("Serif",Font.BOLD,30));
+			labelPm10.setForeground(Color.RED);
 			labelPm10.setLocation(10, 130);
+			labelPm10.setOpaque(true);
+			labelPm10.setBackground(Color.PINK);
 			labelPm10.setSize(200,50);
-			labelPm10.setBackground(Color.RED);
 
 			this.add(labelPm10);
 		}
 
 		{
-			Pm10.setText(DustMain.map.get("PM10"));
-			Pm10.setBackground(Color.RED);
-			Pm10.setFont(new Font("Serif",Font.BOLD,20));
-			Pm10.setLocation(110, 130);
-			Pm10.setSize(200,50);
-			Pm10.setBackground(Color.RED);
-
+			Pm10.setFont(new Font("Serif",Font.BOLD,30));
+			Pm10.setLocation(210, 130);
+			Pm10.setSize(100,50);
+			Pm10.setOpaque(true);
 			this.add(Pm10);
 		}
 
 		{
-			labelPm2_5.setFont(new Font("Serif",Font.BOLD,20));
+			labelPm2_5.setFont(new Font("Serif",Font.BOLD,30));
+			labelPm2_5.setForeground(Color.BLUE);
+
 			labelPm2_5.setLocation(450, 130);
+			labelPm2_5.setOpaque(true);
+			labelPm2_5.setBackground(Color.PINK);
 			labelPm2_5.setSize(200,50);
 			this.add(labelPm2_5);
 		}
 
 		{
-			Pm2_5.setText(DustMain.map.get("Pm2_5"));
-
-			Pm2_5.setFont(new Font("Serif",Font.BOLD,20));
-			Pm2_5.setLocation(550, 130);
-			Pm2_5.setSize(200,50);
+			Pm2_5.setFont(new Font("Serif",Font.BOLD,30));
+			Pm2_5.setOpaque(true);
+			Pm2_5.setLocation(650, 130);
+			Pm2_5.setSize(100,50);
 			this.add(Pm2_5);
 		}
 
-		// MainFrame.dustLock.unlock();
+		addCriterioLine();
 
 		return dustMain;
 	}
@@ -243,30 +297,21 @@ class InitUI extends JFrame{
 		return dust;
 	}
 
-    InitUI(MainFrame mf) throws InterruptedException{
-		this.mf = mf;
-		JFrame fr = new JFrame("This 프레임");
+    InitUI() throws InterruptedException{
         JPanel pn = new JPanel();
-
-        // JButton[] bt = new JButton[BUTTON_SIZE];
-        GridBagConstraints[] gbc = new GridBagConstraints[BUTTON_SIZE];
+       
+		GridBagConstraints[] gbc = new GridBagConstraints[BUTTON_SIZE];
 
         GridBagLayout gbl = new GridBagLayout();
         pn.setLayout(gbl);
 
-
 		for (int i = 0; i < BUTTON_SIZE; i++) {
-            /* Button 초기화 */
-            // bt[i] = new JButton("Button" + i);
-
-            /* GridBagConstraints 초기화 */
             gbc[i] = new GridBagConstraints();
         }
 		
 		
 		{
 			JPanel msgPanel = initMsgPanel();
-			// add(msgPanel);
 			gbc[0].gridx = 0;
 			gbc[0].gridy = 5;
 			gbc[0].weightx = 4;
@@ -280,7 +325,7 @@ class InitUI extends JFrame{
 			textArea = new JTextArea();		
 			textArea.setEditable(false); //쓰기 금지
 			JScrollPane scrollPane = new JScrollPane(textArea);
-			// add(scrollPane);
+			cursor = scrollPane.getVerticalScrollBar();
 			gbc[1].gridx = 0;
 			gbc[1].gridy = 2;
 			gbc[1].weightx = 4;
@@ -291,7 +336,7 @@ class InitUI extends JFrame{
 
 		{
 			JPanel dust = initDustMenuPanel();
-			// add(dust,BorderLayout.NORTH);
+			dust.setBackground(Color.WHITE);
 			gbc[2].gridx = 0;
 			gbc[2].gridy = 0;
 			gbc[2].weightx = 4;
@@ -301,7 +346,7 @@ class InitUI extends JFrame{
 		}
 
 		{
-			JPanel dp = initDustMainPanel();
+			dp = initDustMainPanel();
 			dp.setBackground(Color.white);
 			gbc[3].gridx = 0;
 			gbc[3].gridy = 1;
@@ -311,7 +356,6 @@ class InitUI extends JFrame{
 			pn.add(dp,gbc[3]);
 		}
 		
-		// fr.setContentPane(pn);
 		add(pn);
 		setSize(1000,600);
     	setVisible(true);
@@ -327,61 +371,7 @@ class InitUI extends JFrame{
 			MainFrame.newDeposit.signal();
 			MainFrame.lock.unlock();
 		}
+		cursor.setValue(cursor.getMaximum());
     }
 }
 
-
-
-
-
-class DustTalkUI extends JFrame{
-	private int BUTTON_SIZE = 5;
-	private MainFrame mf;
-	public DustTalkUI(MainFrame mf, String selected){
-		this.mf = mf;
-
-		DustMain dustMain = new DustMain();
-
-
-
-        JPanel pn = new JPanel();
-
-        GridBagConstraints[] gbc = new GridBagConstraints[BUTTON_SIZE];
-
-        GridBagLayout gbl = new GridBagLayout();
-        pn.setLayout(gbl);
-
-
-		for (int i = 0; i < BUTTON_SIZE; i++) {
-            /* Button 초기화 */
-            // bt[i] = new JButton("Button" + i);
-
-            /* GridBagConstraints 초기화 */
-            gbc[i] = new GridBagConstraints();
-        }
-
-		pn.setBackground(Color.WHITE);
-
-
-		{
-			JButton backButton = new JButton("뒤로 가기");
-			backButton.setPreferredSize(new DimensionUIResource(100,50));
-			gbc[0].gridx = 2;
-			gbc[0].gridy = 2;
-			gbc[0].gridwidth =100;
-			gbc[0].gridheight = 50;
-
-			backButton.addActionListener(new ActionListener(){
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					setVisible(false);
-				}
-			});
-			pn.add(backButton,gbc[0]);
-		}
-		// fr.setContentPane(pn);
-		add(pn);
-		setSize(1000,600);
-		setVisible(true);
-	}
-}
