@@ -65,21 +65,17 @@ class MainFrame extends Thread{
 
 class InitUI extends JFrame{
     public static JTextArea textArea;
-	private final static int BUTTON_SIZE = 5;
 	public static JTextField tfMsg;	
+
+
 	public static JLabel Pm10 = new JLabel("");
 	public static JLabel Pm2_5 = new JLabel("");
-	public static JLabel O3 = new JLabel("2.0");
-	public static JLabel NO2 = new JLabel("2.0");
-	public static JLabel CO = new JLabel("2.0");
-	public static JLabel SO2 = new JLabel("2.0");
-	public static JPanel dp= null;
 	public static JLabel labelTimer = new JLabel("timer");
+
 	public static JScrollBar cursor = null;
 
 	private ArrayList<JButton> locButtons = new ArrayList();
 
-	JButton btnSend;
 
 	private void initFetch(){
 				
@@ -107,10 +103,10 @@ class InitUI extends JFrame{
     InitUI() throws InterruptedException{
         JPanel pn = new JPanel();
 		setTitle("Dust Talker");
-		GridBagConstraints[] gbc = new GridBagConstraints[BUTTON_SIZE];
+		GridBagConstraints[] gbc = new GridBagConstraints[5];
         GridBagLayout gbl = new GridBagLayout();
         pn.setLayout(gbl);
-		for (int i = 0; i < BUTTON_SIZE; i++) {
+		for (int i = 0; i < 5; i++) {
             gbc[i] = new GridBagConstraints();
         }
 		// * Message Input UI
@@ -149,7 +145,7 @@ class InitUI extends JFrame{
 		}
 		// * Dust Main UI
 		{
-			dp = initDustMainPanel();
+			JPanel dp = initDustMainPanel();
 			dp.setBackground(Color.white);
 			gbc[3].gridx = 0;
 			gbc[3].gridy = 1;
@@ -172,7 +168,7 @@ class InitUI extends JFrame{
 		msgPanel.setLayout(new BorderLayout());
 		
         tfMsg = new JTextField();
-		btnSend = new JButton("send");
+		JButton btnSend = new JButton("send");
 		
         msgPanel.add(tfMsg, BorderLayout.CENTER);
 		msgPanel.add(btnSend, BorderLayout.EAST);
@@ -319,12 +315,12 @@ class InitUI extends JFrame{
 	private JPanel initDustMainPanel() throws InterruptedException{
 		JPanel dustMain = new JPanel();
 
-        GridBagConstraints[] gbc_main = new GridBagConstraints[BUTTON_SIZE];
+        GridBagConstraints[] gbc_main = new GridBagConstraints[5];
 
         GridBagLayout gbl = new GridBagLayout();
         dustMain.setLayout(gbl);
 
-		for (int i = 0; i < BUTTON_SIZE; i++) {
+		for (int i = 0; i < 5; i++) {
             gbc_main[i] = new GridBagConstraints();
         }
 
