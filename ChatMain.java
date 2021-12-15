@@ -9,6 +9,7 @@ import java.util.Scanner;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
+//sadfasdf
 public class ChatMain extends Thread{
     JTextArea textArea = null; 
     JTextField tfMsg = null;
